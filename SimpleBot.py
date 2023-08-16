@@ -3,7 +3,7 @@ import pyautogui
 import pydirectinput
 import time
 import autoit
-import math
+import keyboard
 import cv2 as cv
 import numpy as np
 import copy
@@ -15,6 +15,7 @@ submit_button_size = 10
 trash_size = 30
 metin_health_bar_image = 'C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\metin_hp.png'
 lvl = 'C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\lvl.png'
+settings_image = 'C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\settings.png'
 healthbarnotempty = False
 pickupkeypressed = False
 healthbar_located = False
@@ -23,7 +24,7 @@ class Metin:
     def locateHealthBar():
         res=[]
         toInsert = True
-        healthbarlocation = pyautogui.locateAllOnScreen('C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\bar_full.png', confidence=0.9)            
+        healthbarlocation = pyautogui.locateAllOnScreen('C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\bar_full.png', confidence=0.7, grayscale=True)            
         if healthbarlocation:
             for barlocation in healthbarlocation:
                 if len(res) == 0:
@@ -35,10 +36,7 @@ class Metin:
                     if toInsert:
                         res.append(barlocation)
                     else:
-                        toInsert = True
-            for barlocation in res:
-                print("Healthbarposition located: " + str(barlocation))
-            
+                        toInsert = True            
             return res
 
     def handleLogout(clients, client):
@@ -74,15 +72,16 @@ class Metin:
         metinhealthbarlocation = 0
         template = cv.imread('C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\metin.png',0)
         w, h = template.shape[::-1]
+        tries = 0
         while not metinhealthbarlocation:
-            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image)
-            screenshot = np.array(pyautogui.screenshot()) 
-            img_gray = cv.cvtColor(screenshot, cv.COLOR_BGR2GRAY)
+            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.7)
+            print("Metinhealthbarlocation: " + str(metinhealthbarlocation))
+            tries += 1
             if metinhealthbarlocation:
                 return True
-                #cv.rectangle(img_gray, (healthbarlocation.left -120, healthbarlocation.top + h -10), (healthbarlocation.left -132, healthbarlocation.top + h), (0,0,255), 2)
-                #cv.imwrite('res.png',img_gray)
-            return False
+            if tries > 3:
+                return False
+            pyautogui.sleep(0.2)
         leftouterpixellocation_x = int(metinhealthbarlocation.left -132)
         leftouterpixellocation_y = int(metinhealthbarlocation.top + h -5)
         # Try to get the Pixel-Color
@@ -105,7 +104,7 @@ class Metin:
             return False
 
     def collectLoot(client):
-        print('collecting loot')
+        #print('collecting loot')
         pyautogui.moveTo(client["window_top"][0] , client["window_top"][1] , 0.2)
         autoit.mouse_click("left",client["window_top"][0], client["window_top"][1], 2)
         pydirectinput.press('z') #cause of us layout
@@ -128,48 +127,82 @@ class Metin:
             return False
         screenshot = pyautogui.screenshot()
         screenshot = cv.cvtColor(np.array(screenshot), cv.COLOR_BGR2HSV)
-        roi_top_left_x = 0
-        roi_top_left_y = 250
-        roi_bottom_right_x = 2500
-        roi_bottom_right_y = 1100
+        roi_top_left_x = 200
+        roi_top_left_y = 350
+        roi_bottom_right_x = 2050
+        roi_bottom_right_y = 980
+        roi_width = roi_bottom_right_x - roi_top_left_x
+        roi_height = roi_bottom_right_y - roi_top_left_y
         cropped_screenshot = screenshot[roi_top_left_y:roi_bottom_right_y, roi_top_left_x:roi_bottom_right_x]
-
-        lower_color = np.array([0, 0, 0])
-        upper_color = np.array([51, 255, 89])
-
-        mask = cv.inRange(cropped_screenshot, lower_color, upper_color)
+        player_pos =  [roi_bottom_right_x//2 - roi_top_left_x, 
+                          (roi_bottom_right_y - roi_top_left_y)//2]
+        # Orc valley mask
+        #mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
         
+        # desert mask
+        #mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
+
+        # sohan mountain mask
+        mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
+
+        # land of fire
+        #mask = cv.inRange(cropped_screenshot, np.array([118,127,36]), np.array([133,184,81]))
+
+        # spiders
+        #mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
+
         pyautogui.sleep(2.5)
         # Step 5: Find contours or location of the object
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
         if contours:
             # find the closes contour to the center of the image and contour are > 1500
             selected_contour = None
+            selected_contour_distance_to_center = 0
+            monster_mask = cv.inRange(cropped_screenshot, np.array([57, 0, 10]), np.array([179, 148, 200]))
+            monster_detection_box_size = 40
             for contour in contours:
-                if cv.contourArea(contour) > 1500:
+                print(cv.contourArea(contour))
+                if cv.contourArea(contour) > 150: #900
+                    # Metin and monsters mask
+                    x, y, w, h = cv.boundingRect(contour)
+                    w += monster_detection_box_size
+                    h += monster_detection_box_size
+                    # check if in monster mask there is a monster near the metin position
+                    monster_mask_roi = monster_mask[y-monster_detection_box_size:y+h+monster_detection_box_size, x-monster_detection_box_size:x+w+monster_detection_box_size]
+                    # if the amount of white pixels is more than 10% of the area, then there is a monster
+                    if cv.countNonZero(monster_mask_roi) > (w*h)*0.7:
+                        print("Monster near metin, skipping", cv.countNonZero(monster_mask_roi) ,(w*h))
+                        selected_contour = contour
+                        break
                     if selected_contour is None:
                         selected_contour = contour
                     else:
-                        current_countour_distance_to_center = math.sqrt((roi_bottom_right_x / 2 - contour[0][0][0]) ** 2 + (roi_bottom_right_y / 2 - contour[0][0][1]) ** 2)
-                        selected_contour_distance_to_center = math.sqrt((roi_bottom_right_x / 2 - selected_contour[0][0][0]) ** 2 + (roi_bottom_right_y / 2 - selected_contour[0][0][1]) ** 2)
+                        current_countour_distance_to_center = abs(player_pos[0] - contour[0][0][0]) + abs(player_pos[1] - contour[0][0][1]) 
                         if current_countour_distance_to_center < selected_contour_distance_to_center:
                             selected_contour = contour
             if selected_contour is None:
                 return False
-            
-            # print the area
-            print(cv.contourArea(selected_contour))
             x, y, w, h = cv.boundingRect(selected_contour)
             object_center_x = x + w // 2
             object_center_y = y + h // 2
             # Step 6: Click on the detected object
-            pyautogui.moveTo(roi_top_left_x + object_center_x, roi_top_left_y + object_center_y - 15, 0.2)
-            autoit.mouse_click("left", roi_top_left_x + object_center_x, roi_top_left_y + object_center_y - 15, 2)
+            pyautogui.moveTo(roi_top_left_x + object_center_x, roi_top_left_y + object_center_y, 0.2)
+            autoit.mouse_click("left", roi_top_left_x + object_center_x, roi_top_left_y + object_center_y, 2)
             # write the masked image to disk with a rect drawn around the detected object
-            print("Object found with area: " + str(cv.contourArea(selected_contour)))
-            cv.rectangle(screenshot, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv.imwrite("res.png", cv.cvtColor(screenshot, cv.COLOR_HSV2BGR))
+            print("Metin found! (",roi_top_left_x + object_center_x, ", ", roi_top_left_y + object_center_y, ") and area: ", cv.contourArea(selected_contour))
+            
+            cv.rectangle(cropped_screenshot, 
+                         (roi_bottom_right_x//2 - roi_top_left_x - monster_detection_box_size, 
+                          (roi_bottom_right_y - roi_top_left_y)//2 - monster_detection_box_size), 
+                          (roi_bottom_right_x//2 - roi_top_left_x +  monster_detection_box_size,
+                            (roi_bottom_right_y - roi_top_left_y)//2 +  monster_detection_box_size),
+                         (0, 0, 0), 2)
+            cv.rectangle(cropped_screenshot, (x, y), (x + w, y + h), (255, 255, 255), 2,)
+            cv.rectangle(cropped_screenshot, (x - monster_detection_box_size, y - monster_detection_box_size), (x + w + monster_detection_box_size, y + h + monster_detection_box_size), (255, 0, 0), 2)
+            cv.imwrite("res.png", cv.cvtColor(cropped_screenshot, cv.COLOR_HSV2RGB))
             cv.imwrite("mask.png", mask)
+            cv.imwrite("monstermask.png", monster_mask)
             
             return True
         else:
@@ -275,7 +308,7 @@ class Metin:
             pydirectinput.keyDown("space")
             pyautogui.sleep(4)
             pydirectinput.keyUp("space")
-            autoit.mouse_click('right')
+            pydirectinput.press('2')
 
             
             
@@ -286,6 +319,7 @@ def run_bot():
     healthbarlocations = 0
     while not healthbarlocations:
         healthbarlocations = Metin.locateHealthBar()
+    
     client_id = 0
     client = None
     
@@ -302,8 +336,12 @@ def run_bot():
                       "window_top": (location[0] + 10, location[1] - 1300)
                      }
         client = copy.deepcopy(append_dict)
+        print("Healthbarposition located: " + str(location))
         break
     while True:
+        # check if then End key is pressed
+        if keyboard.is_pressed('end'):
+            break
         Metin.collectLoot(client)
         #noticed that sometimes it doesn't loot
         if client["not_farming_loop_counter"] > 5:
@@ -316,14 +354,11 @@ def run_bot():
             pydirectinput.press('q')
             pydirectinput.press('q')
             client["not_farming_loop_counter"] = 0
-        pyautogui.moveTo(client["window_top"][0], client["window_top"][1], 0.2)
-        autoit.mouse_click("left",client["window_top"][0], client["window_top"][1], 2, 1)
-        #    print("Closing Settings!")
-        #    pydirectinput.press('escape')
-        #if(time.time() - client["clear_inventory_timer"] > 500):
-        #    client["clear_inventory_bugged_timer"] = time.time()
-        #    Metin.clearInventory(client)
-        #    client["clear_inventory_timer"] = time.time()
+        #pyautogui.moveTo(client["window_top"][0], client["window_top"][1], 0.2)
+        #autoit.mouse_click("left",client["window_top"][0], client["window_top"][1], 2, 1)
+        if Metin.locateAndFilterProp(client, settings_image):
+                print("Closing Settings!")
+                pydirectinput.press('escape')
         #try to find a metin:
         if len(Metin.locateAllAndFilterProp(client, lvl)) > 1:
             pydirectinput.keyDown('a')
@@ -331,10 +366,12 @@ def run_bot():
             pyautogui.sleep(2)
             pydirectinput.keyUp('a')
             pydirectinput.keyUp('s')
-            break
+            print("More than one lvl indicator found")
+            continue
         if not client["farming"]:
             client["not_farming_loop_counter"] += 1
             if(Metin.locateAndFilterProp(client, metin_health_bar_image)):
+                print("Metin is being targeted for too long!")
                 Metin.collectLoot(client)
                 pydirectinput.keyDown('space')
                 pyautogui.sleep(1)
@@ -346,10 +383,11 @@ def run_bot():
                 pydirectinput.keyUp('s')
                 pydirectinput.press('escape')
                 client["bugged_timer"] = time.time()
-                break
+                continue
             if Metin.findMetinOpenCV(client):
                 client["bugged_timer"] = time.time()
                 client["farming"] = True
+                pyautogui.sleep(1)
                 continue
             else:
                 Metin.lookaround()
@@ -357,22 +395,19 @@ def run_bot():
                 continue
             #check if the metin is still alive
         if Metin.checkIfMetinStillAlive(client):
-            if(time.time() - client["bugged_timer"] > 20):
+            if(time.time() - client["bugged_timer"] > 5):
                 Metin.collectLoot(client)
-                pydirectinput.press('escape')
                 pydirectinput.keyDown('a')
                 pydirectinput.keyDown('s')
-                pydirectinput.keyDown('q')
+                #pydirectinput.keyDown('q')
                 pyautogui.sleep(1)
                 pydirectinput.keyUp('a')
                 pydirectinput.keyUp('s')
-                pydirectinput.keyUp('q')
-                pydirectinput.keyDown('space')
-                time.sleep(1)
-                pydirectinput.keyUp('space')
+                #pydirectinput.keyUp('q')
                 client["bugged_timer"] = time.time()
-                client["farming"] = False
-                print("UnBugging client " + str(client["client_id"]) + "!")
+                client["farming"] = True
+                pydirectinput.press('2')
+                #print("UnBugging client " + str(client["client_id"]) + "!")
         else:
             client["farming"] = False
             Metin.collectLoot(client)
@@ -386,44 +421,5 @@ def run_bot():
 
 
 if __name__ == '__main__':
+    #Metin.farm()
     run_bot()
-
-# while True:
-#     if not Metin.findMetinOpenCV():
-#         time.sleep(3)
-#     else:
-
-#         healthbarlocation = pyautogui.locateOnScreen('C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\bar_full.png', confidence=0.9, grayscale=True)
-
-#         if healthbarlocation:
-#             print("Healthbarposition located: " + str(healthbarlocation))
-#             healthbar_located = True
-#             leftouterpixellocation_x = int(healthbarlocation.left + 14)
-#             leftouterpixellocation_y = int(healthbarlocation.top + 3)
-
-#         while healthbar_located:
-#             #pyautogui.screenshot("testshot.png", region=(healthbarlocation))
-
-#             # Try to get the Pixel-Color
-#             try:
-#                 pixelcolor = pyautogui.pixel(leftouterpixellocation_x, leftouterpixellocation_y)
-#             except:
-#                 print("Error")
-
-#             # If the Color is 99,39,39 the Healthbar isnt empty
-#             if pixelcolor == (99, 39, 39):
-#                 pickupkeypressed = False
-
-#             else:
-#                 if not pickupkeypressed :
-#                     print("press y")
-#                     time.sleep(0.5)
-#                     pydirectinput.press('z') #cause of us layout
-#                     pickupkeypressed = True
-
-#             time.sleep(1)
-
-
-
-        # time.sleep(1)
-
