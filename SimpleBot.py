@@ -1,12 +1,12 @@
-from PIL.ImageOps import grayscale
 import pyautogui
 import pydirectinput
-import time
 import autoit
 import keyboard
 import cv2 as cv
 import numpy as np
 import copy
+import time
+
 METINTEXTDISTANCE = 60
 deliver_button_size = 10
 market_button_size = 10
@@ -140,16 +140,16 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
         
         # desert mask
-        #mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
+        mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
 
         # sohan mountain mask
-        mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
+        #mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
 
         # land of fire
         #mask = cv.inRange(cropped_screenshot, np.array([118,127,36]), np.array([133,184,81]))
 
         # spiders
-        #mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
+        mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
 
         pyautogui.sleep(2.5)
         # Step 5: Find contours or location of the object
@@ -160,10 +160,10 @@ class Metin:
             selected_contour = None
             selected_contour_distance_to_center = 0
             monster_mask = cv.inRange(cropped_screenshot, np.array([57, 0, 10]), np.array([179, 148, 200]))
-            monster_detection_box_size = 40
+            monster_detection_box_size = 0
             for contour in contours:
                 print(cv.contourArea(contour))
-                if cv.contourArea(contour) > 150: #900
+                if cv.contourArea(contour) > 300: #900
                     # Metin and monsters mask
                     x, y, w, h = cv.boundingRect(contour)
                     w += monster_detection_box_size
@@ -406,7 +406,6 @@ def run_bot():
                 #pydirectinput.keyUp('q')
                 client["bugged_timer"] = time.time()
                 client["farming"] = True
-                pydirectinput.press('2')
                 #print("UnBugging client " + str(client["client_id"]) + "!")
         else:
             client["farming"] = False
