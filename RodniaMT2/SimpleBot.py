@@ -6,6 +6,11 @@ import cv2 as cv
 import numpy as np
 import copy
 import time
+import os
+
+# print current dir
+current_dir = os.getcwd() 
+print(current_dir)
 
 METINTEXTDISTANCE = 60
 deliver_button_size = 10
@@ -13,9 +18,9 @@ market_button_size = 10
 orc_tooth_button_size = 10
 submit_button_size = 10
 trash_size = 30
-metin_health_bar_image = 'C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\metin_hp.png'
-lvl = 'C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\lvl.png'
-settings_image = 'C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\settings.png'
+metin_health_bar_image = current_dir + '\\images\\metin_hp.png'
+lvl = current_dir + '\\images\\lvl.png'
+settings_image = current_dir + '\\images\\settings.png'
 healthbarnotempty = False
 pickupkeypressed = False
 healthbar_located = False
@@ -24,7 +29,7 @@ class Metin:
     def locateHealthBar():
         res=[]
         toInsert = True
-        healthbarlocation = pyautogui.locateAllOnScreen('C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\bar_full.png', confidence=0.7, grayscale=True)            
+        healthbarlocation = pyautogui.locateAllOnScreen(current_dir + '\\images\\bar_full.png', confidence=0.7, grayscale=True)            
         if healthbarlocation:
             for barlocation in healthbarlocation:
                 if len(res) == 0:
@@ -70,7 +75,7 @@ class Metin:
 
     def checkIfMetinStillAlive(client):
         metinhealthbarlocation = 0
-        template = cv.imread('C:\\Users\\gil-t\\Desktop\\dev\\METINCV\\images\\metin.png',0)
+        template = cv.imread(current_dir + '\\images\\metin.png',0)
         w, h = template.shape[::-1]
         tries = 0
         while not metinhealthbarlocation:
