@@ -427,9 +427,5 @@ def run_bot():
 
 if __name__ == '__main__':
     #Metin.farm()
-    #run_bot()
-    while True:
-        fishingWindow_image_loc = pyautogui.locateAllOnScreen(fishingWindow_image, confidence=0.6, grayscale=True)
-        for i, fishingWindow in enumerate(fishingWindow_image_loc):
-           print(i, "Fishing Window found! " + str(fishingWindow))
-        pyautogui.sleep(.2)
+    run_bot()
+    

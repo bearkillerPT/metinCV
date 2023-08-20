@@ -12,12 +12,13 @@ bait_hotkey = '1'
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 fishingWindow = cv2.imread(os.path.join(current_dir, "images/fishingWindow.png"))
+pyautogui.sleep(1)
 while True:
-    pyautogui.sleep(3)
+    pyautogui.sleep(2.5)
     print("Using bait (hotkey", bait_hotkey ,") and trying to start fishing")
     pydirectinput.press(bait_hotkey)
     pyautogui.sleep(1)
-    pydirectinput.press("space")
+    pydirectinput.press("space", presses=2, interval=0.1)
     fishingWindowLocation = pyautogui.locateOnScreen(fishingWindow, confidence=0.7)
     while fishingWindowLocation is None:
         fishingWindowLocation = pyautogui.locateOnScreen(fishingWindow, confidence=0.7)
@@ -28,8 +29,6 @@ while True:
     roi_width = 325
     roi_height = 225
 
-    latestPositions = []
-    latestPositionLength = 2
     while fishingWindowLocation is not None:
         screenshot = np.array(pyautogui.screenshot())[roi_top:roi_top+roi_height, roi_left:roi_left+roi_width]
         gray_screenshot = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
@@ -49,48 +48,19 @@ while True:
         if cv2.contourArea(cnts[0]) > 1:
             x, y, w, h = cv2.boundingRect(cnts[0])
             
-            direction = 0
-            # determine the direction in 360 degrees
-            if len(latestPositions) > latestPositionLength:
-                latestPositions.pop(0)
-            latestPositions.append((x, y, w, h))
-            if len(latestPositions) > 1:
-                direction = np.arctan2(latestPositions[-1][1] - latestPositions[-2][1], latestPositions[-1][0] - latestPositions[-2][0]) * 180 / np.pi
-                direction = (direction + 360) % 360
-            # draw a rectangle that is ahead of the fish in the direction of the fish by 50 pixels
-            pixel_distance = 25
-            offset_rectangle_points = [(x + int(pixel_distance * np.cos(direction * np.pi / 180)), y + int(pixel_distance * np.sin(direction * np.pi / 180))), (x+w + int(pixel_distance * np.cos(direction * np.pi / 180)), y+h + int(pixel_distance * np.sin(direction * np.pi / 180)))]
-            rect_color = (255, 255, 255)
-            circle_radius = 70
+            circle_radius = 75
             window_center = (roi_width, roi_height + 40)
 
             # check if the center of the fish is inside the circle by approximating the circle with a square
             # if it is inside, then the fish is swimming towards the center of the circle
             # if it is outside, then the fish is swimming away from the center of the circle
-            if offset_rectangle_points[0][0] < roi_width and offset_rectangle_points[0][0] > 0 and offset_rectangle_points[0][1] < roi_height and offset_rectangle_points[0][1] > 0: 
-                if offset_rectangle_points[0][0] > roi_width//2 - circle_radius and offset_rectangle_points[0][0] < roi_width//2 + circle_radius and offset_rectangle_points[0][1] > roi_height//2 - circle_radius and offset_rectangle_points[0][1] < roi_height//2 + circle_radius:
+            if x < roi_width and x > 0 and y < roi_height and y > 0: 
+                if x > roi_width//2 - circle_radius and x < roi_width//2 + circle_radius and y > roi_height//2 - circle_radius and y < roi_height//2 + circle_radius:
                     print("swimming towards")
-                    pyautogui.moveTo(offset_rectangle_points[0][0] + roi_left, offset_rectangle_points[0][1] + roi_top)
+                    pyautogui.moveTo(x  + roi_left, y  + roi_top)
                     pyautogui.click()
                     rect_color = (255, 0, 0)
                     pyautogui.sleep(.1)
 
-
-            # draw an arrow in the direction of the fish at the center of the screenshot and half the size of screenshot bigger
-            cv2.arrowedLine(screenshot, (window_center[0]//2, window_center[1]//2), (window_center[0]//2 + int(window_center[0]//2 * np.cos(direction * np.pi / 180)), window_center[1]//2 + int(window_center[1]//2 * np.sin(direction * np.pi / 180))), (255, 255, 255), 2)    
-            # draw a circle in the center of the fishingWindowLocation with radius 75
-            cv2.circle(screenshot,  (window_center[0]//2, window_center[1]//2), circle_radius, (255, 255, 255), 2)
-
-            # draw the biggest contour (c) in green
-            cv2.rectangle(screenshot, (x, y), (x+w, y+h), (0, 255, 0), 2)        
-
-            cv2.rectangle(screenshot,offset_rectangle_points[0], offset_rectangle_points[1] , rect_color, 2)
-            screenshot = cv2.cvtColor(screenshot, cv2.COLOR_RGB2BGR)
-            winname = "screenshot"
-            #screenshot = cv2.resize(screenshot, (screenshot.shape[1]*2, screenshot.shape[0]*2))
-            #cv2.namedWindow(winname)   
-            #cv2.moveWindow(winname, 0,0)
-            cv2.imshow(winname, screenshot)
-            cv2.waitKey(1)
             fishingWindowLocation = pyautogui.locateOnScreen(fishingWindow, confidence=0.7)
     print("Fishing window can't be detected anymore, waiting for 1 second")
