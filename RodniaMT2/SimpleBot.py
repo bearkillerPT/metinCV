@@ -65,7 +65,7 @@ class Metin:
         res = []
         prop_locations = pyautogui.locateAllOnScreen(prop_image, confidence=0.8, grayscale=True)
         for prop_location in prop_locations:
-            if prop_location[0] > client["healthbar"][0] and prop_location[0] < client["healthbar"][0] + 800 and prop_location[1] < client["healthbar"][1] and prop_location[1] > client["healthbar"][1] - 900:
+            if prop_location[0] > client["healthbar"][0] and prop_location[0] < client["healthbar"][0] + client["healthbar"][2] and prop_location[1] < client["healthbar"][1] and prop_location[1] > client["healthbar"][1]:
                     res.append(prop_location)
         return res
 
@@ -81,7 +81,7 @@ class Metin:
         w, h = template.shape[::-1]
         tries = 0
         while not metinhealthbarlocation:
-            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.7)
+            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.6)
             print("Metinhealthbarlocation: " + str(metinhealthbarlocation))
             tries += 1
             if metinhealthbarlocation:
@@ -134,23 +134,21 @@ class Metin:
             return False
         screenshot = pyautogui.screenshot()
         screenshot = cv.cvtColor(np.array(screenshot), cv.COLOR_BGR2HSV)
-        roi_top_left_x = 200
-        roi_top_left_y = 350
-        roi_bottom_right_x = 2050
-        roi_bottom_right_y = 980
-        roi_width = roi_bottom_right_x - roi_top_left_x
-        roi_height = roi_bottom_right_y - roi_top_left_y
+        roi_top_left_x = client["healthbar"][0] 
+        roi_top_left_y =   client["healthbar"][1] 
+        roi_bottom_right_x = client["healthbar"][2]
+        roi_bottom_right_y =    client["healthbar"][3]
         cropped_screenshot = screenshot[roi_top_left_y:roi_bottom_right_y, roi_top_left_x:roi_bottom_right_x]
         player_pos =  [roi_bottom_right_x//2 - roi_top_left_x, 
                           (roi_bottom_right_y - roi_top_left_y)//2]
         # Orc valley mask
-        #mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
+        mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
         
         # desert mask
         # mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
 
         # sohan mountain mask
-        mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
+        #mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
 
         # land of fire
         #mask = cv.inRange(cropped_screenshot, np.array([118,127,36]), np.array([133,184,81]))
@@ -330,12 +328,12 @@ def run_bot():
         pyautogui.sleep(1)
     print(client_box)
     client = {"client_id" : 0,
-            "healthbar": {
-                "left": client_box[0] + 100,
-                "top": client_box[1] + 100,
-                "width": client_box[2],
-                "height": client_box[3]
-            },
+            "healthbar": [
+                client_box[0],
+                client_box[1],
+                client_box[2] - 350,
+                client_box[3] - 200
+            ],
             "skills_timer" : 0,
             "bugged_timer": 0,
             "biologist_timer": 0,
@@ -437,8 +435,8 @@ def get_window_res_callback(hwnd, extra):
         print("Window %s:" % window_name)
         print("\tLocation: (%d, %d)" % (x, y))
         print("\t    Size: (%d, %d)" % (w, h))
-        if x < 20:
-            x = 20
+        if x < 40:
+            x = 40
         if y < 20:
             y = 20
         client_box = [x, y, w, h]
