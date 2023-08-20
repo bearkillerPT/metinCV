@@ -73,7 +73,7 @@ while True:
             # if it is outside, then the fish is swimming away from the center of the circle
             if offset_rectangle_points[0][0] < roi_width and offset_rectangle_points[0][0] > 0 and offset_rectangle_points[0][1] < roi_height and offset_rectangle_points[0][1] > 0: 
                 if offset_rectangle_points[0][0] > roi_width//2 - circle_radius and offset_rectangle_points[0][0] < roi_width//2 + circle_radius and offset_rectangle_points[0][1] > roi_height//2 - circle_radius and offset_rectangle_points[0][1] < roi_height//2 + circle_radius:
-                    if history_counter > 2:
+                    if history_counter > latestPositionLength - 1:
                         print("swimming towards")
                         pyautogui.moveTo(offset_rectangle_points[0][0] + roi_left, offset_rectangle_points[0][1] + roi_top)
                         pyautogui.click()
