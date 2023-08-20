@@ -29,7 +29,7 @@ class Metin:
     def locateHealthBar():
         res=[]
         toInsert = True
-        healthbarlocation = pyautogui.locateAllOnScreen(current_dir + '\\images\\bar_full.png', confidence=0.7, grayscale=True)            
+        healthbarlocation = pyautogui.locateAllOnScreen(current_dir + '\\images\\1366_768\\bar_full.png', confidence=0.7, grayscale=True)      
         if healthbarlocation:
             for barlocation in healthbarlocation:
                 if len(res) == 0:
@@ -42,6 +42,7 @@ class Metin:
                         res.append(barlocation)
                     else:
                         toInsert = True            
+
             return res
 
     def handleLogout(clients, client):
@@ -321,6 +322,7 @@ class Metin:
 def run_bot():
     bilogist = False
     # Locate the Healthbar for init
+
     healthbarlocations = 0
     while not healthbarlocations:
         healthbarlocations = Metin.locateHealthBar()
@@ -424,6 +426,117 @@ def run_bot():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     #Metin.farm()
-    run_bot()
+
+    import pyautogui
+    import pygetwindow as gw
+    import time
+
+    from PIL import Image, ImageDraw, ImageOps
+
+    ############# DETECT SCREEN ###################
+
+    # Wait for a few seconds to give you time to focus on the application's window
+    time.sleep(5)
+
+
+
+   
+
+    # Specify the title of the application's window
+    app_window_title = "Rodnia - The King's Return"
+    template_image_path = "metin.png"  # Path to the template image
+
+    # Find the application window by its title
+    app_window = gw.getWindowsWithTitle(app_window_title)
+    if app_window:
+        window = app_window[0]
+        
+        # Get the window's coordinates and dimensions
+        left, top, width, height = window.left, window.top, window.width, window.height
+
+        button_x = left + (app_window[0].width // 2)
+        button_y = top + (app_window[0].height // 2)
+
+        # Move the mouse to the button's location and click
+        print("Moving and clicking....")
+        pyautogui.moveTo(button_x, button_y)
+        pyautogui.click()
+
+        while True:
+            # Capture a screenshot of the window
+            screenshot = pyautogui.screenshot(region=(left, top, width, height))
+            screenshot.save('screenshot.png')
+
+            screenshot_cv_color = cv.cvtColor(np.array(screenshot), cv.COLOR_RGB2HSV)
+
+
+            mask = cv.inRange(screenshot_cv_color, np.array([93,101,144]), np.array([115,150,250]))
+
+            
+            cv.imwrite('screenshot.png', screenshot_cv_color)
+
+            
+            # Load the larger image (haystack) and the image to locate (needle)
+            haystack_path = 'screenshot.png'
+            needle_path = 'metin1.png'
+
+            haystack_image = Image.open(haystack_path)
+            needle_image = Image.open(needle_path)
+
+            # Find the location of the metin in the game screen
+            location = pyautogui.locate(needle_image, haystack_image, grayscale=True, confidence=0.6)
+
+            if location:
+                print(location)
+
+                img_with_box = screenshot.copy()
+                draw = ImageDraw.Draw(img_with_box)
+                draw.rectangle([location.left, location.top, location.left + location.width, location.top + location.height], outline="red", width=2)
+
+                # Save the image with the box
+                img_with_box.save("screenshot_with_box.png")
+            else:
+                print("Metin not found")
+
+            time.sleep(1)
+            
+            
+    else:
+        print("Application window not found.")
+
+
+    ################## CLICK ON METINS ################
+
+    # Optional: You can add some delay to give the app time to respond
+    time.sleep(2)
+
+    # Close the app or perform other actions if needed
+    # ...
+
+
+
+
+    # Move the mouse back to a safe location
+    pyautogui.moveTo(0, 0)
+
+
+
+    
+
+
+
+    # run_bot()
