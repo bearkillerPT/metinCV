@@ -5,6 +5,27 @@ import cv2
 import numpy as np
 import os 
 
+
+def get_window_res_callback(hwnd, extra):
+    global client_box
+    rect = win32gui.GetWindowRect(hwnd)
+    x = rect[0]
+    y = rect[1]
+    w = rect[2] - x
+    h = rect[3] - y
+    window_name = win32gui.GetWindowText(hwnd)
+    if window_name == 'Rodnia - The King\'s Return':
+        print("Window %s:" % window_name)
+        print("\tLocation: (%d, %d)" % (x, y))
+        print("\t    Size: (%d, %d)" % (w, h))
+        if x < 20:
+            x = 20
+        if y < 20:
+            y = 20
+        client_box = [x, y, w, h]
+
+
+
 print("For this script please go the fishing location and start fishing, the bot will recognize the fishing window and start fishing")
 bait_hotkey = '1'
 
@@ -26,7 +47,7 @@ while True:
     print("Fishing window detected at: ", fishingWindowLocation)
     roi_left = fishingWindowLocation[0] + 35
     roi_top = fishingWindowLocation[1] + 75
-    roi_width = 325
+    roi_width = 325 
     roi_height = 225
 
     latestPositions = []
