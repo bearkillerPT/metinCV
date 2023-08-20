@@ -7,6 +7,7 @@ import numpy as np
 import copy
 import time
 import os
+import win32gui
 
 # print current dir
 current_dir = os.getcwd() 
@@ -146,16 +147,16 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
         
         # desert mask
-        mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
+        # mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
 
         # sohan mountain mask
-        #mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
+        mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
 
         # land of fire
         #mask = cv.inRange(cropped_screenshot, np.array([118,127,36]), np.array([133,184,81]))
 
         # spiders
-        mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
+        #mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
 
         pyautogui.sleep(2.5)
         # Step 5: Find contours or location of the object
@@ -317,33 +318,33 @@ class Metin:
             pydirectinput.press('2')
 
             
-            
+client_box = [0,0,0,0]    
     
 def run_bot():
+    global client_box
     bilogist = False
     # Locate the Healthbar for init
-    healthbarlocations = 0
-    while not healthbarlocations:
-        healthbarlocations = Metin.locateHealthBar()
+    win32gui.EnumWindows(get_window_res_callback, None)
     
-    client_id = 0
-    client = None
-    
-    for location in healthbarlocations:
-        append_dict = {"client_id" : client_id,
-                      "healthbar": location,
-                      "skills_timer" : 0,
-                      "bugged_timer": 0,
-                      "biologist_timer": 0,
-                      "clear_inventory_timer" : 0,
-                      "clear_inventory_bugged_timer" : 0,
-                      "not_farming_loop_counter": 0,
-                      "farming": False,
-                      "window_top": (location[0] + 10, location[1] - 1300)
-                     }
-        client = copy.deepcopy(append_dict)
-        print("Healthbarposition located: " + str(location))
-        break
+    while client_box == [0,0,0,0]:
+        pyautogui.sleep(1)
+    print(client_box)
+    client = {"client_id" : 0,
+            "healthbar": {
+                "left": client_box[0] + 100,
+                "top": client_box[1] + 100,
+                "width": client_box[2],
+                "height": client_box[3]
+            },
+            "skills_timer" : 0,
+            "bugged_timer": 0,
+            "biologist_timer": 0,
+            "clear_inventory_timer" : 0,
+            "clear_inventory_bugged_timer" : 0,
+            "not_farming_loop_counter": 0,
+            "farming": False,
+            "window_top": (client_box[0], client_box[1])
+    }
     while True:
         # check if then End key is pressed
         if keyboard.is_pressed('end'):
@@ -387,7 +388,7 @@ def run_bot():
                 pyautogui.sleep(1)
                 pydirectinput.keyUp('a')
                 pydirectinput.keyUp('s')
-                pydirectinput.press('escape')
+                #pydirectinput.press('escape')
                 client["bugged_timer"] = time.time()
                 continue
             if Metin.findMetinOpenCV(client):
@@ -424,8 +425,24 @@ def run_bot():
                 
 
 
+def get_window_res_callback(hwnd, extra):
+    global client_box
+    rect = win32gui.GetWindowRect(hwnd)
+    x = rect[0]
+    y = rect[1]
+    w = rect[2] - x
+    h = rect[3] - y
+    window_name = win32gui.GetWindowText(hwnd)
+    if window_name == 'Rodnia - The King\'s Return':
+        print("Window %s:" % window_name)
+        print("\tLocation: (%d, %d)" % (x, y))
+        print("\t    Size: (%d, %d)" % (w, h))
+        if x < 20:
+            x = 20
+        if y < 20:
+            y = 20
+        client_box = [x, y, w, h]
 
 if __name__ == '__main__':
     #Metin.farm()
     run_bot()
-    

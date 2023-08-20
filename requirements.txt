@@ -4,3 +4,5 @@ pyautoit
 keyboard
 opencv-python
 numpy
+pywinauto
+win32gui
