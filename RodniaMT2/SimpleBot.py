@@ -21,6 +21,7 @@ trash_size = 30
 metin_health_bar_image = current_dir + '\\images\\metin_hp.png'
 lvl = current_dir + '\\images\\lvl.png'
 settings_image = current_dir + '\\images\\settings.png'
+fishingWindow_image = current_dir + '\\images\\fishingWindow.png'
 healthbarnotempty = False
 pickupkeypressed = False
 healthbar_located = False
@@ -426,4 +427,9 @@ def run_bot():
 
 if __name__ == '__main__':
     #Metin.farm()
-    run_bot()
+    #run_bot()
+    while True:
+        fishingWindow_image_loc = pyautogui.locateAllOnScreen(fishingWindow_image, confidence=0.6, grayscale=True)
+        for i, fishingWindow in enumerate(fishingWindow_image_loc):
+           print(i, "Fishing Window found! " + str(fishingWindow))
+        pyautogui.sleep(.2)
