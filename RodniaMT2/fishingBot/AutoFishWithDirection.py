@@ -4,7 +4,10 @@ import pydirectinput
 import cv2
 import numpy as np
 import os 
+import win32gui
 
+
+client_box = [0, 0, 0, 0]
 
 def get_window_res_callback(hwnd, extra):
     global client_box
@@ -29,7 +32,12 @@ def get_window_res_callback(hwnd, extra):
 print("For this script please go the fishing location and start fishing, the bot will recognize the fishing window and start fishing")
 bait_hotkey = '1'
 
-
+win32gui.EnumWindows(get_window_res_callback, None)
+while client_box == [0, 0, 0, 0]:
+    win32gui.EnumWindows(get_window_res_callback, None)
+    pyautogui.sleep(1)
+    continue
+print("Client box: ", client_box)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 fishingWindow = cv2.imread(os.path.join(current_dir, "images/fishingWindow.png"))
@@ -47,11 +55,11 @@ while True:
     print("Fishing window detected at: ", fishingWindowLocation)
     roi_left = fishingWindowLocation[0] + 35
     roi_top = fishingWindowLocation[1] + 75
-    roi_width = 325 
-    roi_height = 225
-
+    roi_width = client_box[2] * 325 // 2073 
+    roi_height = client_box[3] * 250 // 1211
+    print("roi: ", roi_left, roi_top, roi_width, roi_height)
     latestPositions = []
-    latestPositionLength = 3
+    latestPositionLength = 2
     history_counter = 0
     while fishingWindowLocation is not None:
         screenshot = np.array(pyautogui.screenshot())[roi_top:roi_top+roi_height, roi_left:roi_left+roi_width]
@@ -86,7 +94,7 @@ while True:
             pixel_distance = 25
             offset_rectangle_points = [(x + int(pixel_distance * np.cos(direction * np.pi / 180)), y + int(pixel_distance * np.sin(direction * np.pi / 180))), (x+w + int(pixel_distance * np.cos(direction * np.pi / 180)), y+h + int(pixel_distance * np.sin(direction * np.pi / 180)))]
             rect_color = (255, 255, 255)
-            circle_radius = 70
+            circle_radius = 75
             window_center = (roi_width, roi_height + 40)
 
             # check if the center of the fish is inside the circle by approximating the circle with a square
@@ -106,6 +114,7 @@ while True:
             cv2.arrowedLine(screenshot, (window_center[0]//2, window_center[1]//2), (window_center[0]//2 + int(window_center[0]//2 * np.cos(direction * np.pi / 180)), window_center[1]//2 + int(window_center[1]//2 * np.sin(direction * np.pi / 180))), (255, 255, 255), 2)    
             # draw a circle in the center of the fishingWindowLocation with radius 75
             cv2.circle(screenshot,  (window_center[0]//2, window_center[1]//2), circle_radius, (255, 255, 255), 2)
+            pyautogui.sleep(.01)
 
             # draw the biggest contour (c) in green
             cv2.rectangle(screenshot, (x, y), (x+w, y+h), (0, 255, 0), 2)        

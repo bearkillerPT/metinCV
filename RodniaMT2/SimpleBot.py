@@ -4,10 +4,10 @@ import autoit
 import keyboard
 import cv2 as cv
 import numpy as np
-import copy
 import time
 import os
-import win32gui
+import pygetwindow as gw
+
 
 # print current dir
 current_dir = os.getcwd() 
@@ -81,7 +81,7 @@ class Metin:
         w, h = template.shape[::-1]
         tries = 0
         while not metinhealthbarlocation:
-            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.6)
+            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.7)
             print("Metinhealthbarlocation: " + str(metinhealthbarlocation))
             tries += 1
             if metinhealthbarlocation:
@@ -142,7 +142,7 @@ class Metin:
         player_pos =  [roi_bottom_right_x//2 - roi_top_left_x, 
                           (roi_bottom_right_y - roi_top_left_y)//2]
         # Orc valley mask
-        mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
+        #mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
         
         # desert mask
         # mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
@@ -154,7 +154,7 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([118,127,36]), np.array([133,184,81]))
 
         # spiders
-        #mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
+        mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
 
         pyautogui.sleep(2.5)
         # Step 5: Find contours or location of the object
@@ -322,17 +322,14 @@ def run_bot():
     global client_box
     bilogist = False
     # Locate the Healthbar for init
-    win32gui.EnumWindows(get_window_res_callback, None)
-    
-    while client_box == [0,0,0,0]:
-        pyautogui.sleep(1)
-    print(client_box)
+    client_box = gw.getWindowsWithTitle('Rodnia - The King\'s Return')[0]
+
     client = {"client_id" : 0,
             "healthbar": [
-                client_box[0],
-                client_box[1],
-                client_box[2] - 350,
-                client_box[3] - 200
+                client_box.left,
+                client_box.top,
+                client_box.width,
+                client_box.height
             ],
             "skills_timer" : 0,
             "bugged_timer": 0,
@@ -341,7 +338,7 @@ def run_bot():
             "clear_inventory_bugged_timer" : 0,
             "not_farming_loop_counter": 0,
             "farming": False,
-            "window_top": (client_box[0], client_box[1])
+            "window_top": (client_box.left, client_box.top)
     }
     while True:
         # check if then End key is pressed
@@ -423,23 +420,6 @@ def run_bot():
                 
 
 
-def get_window_res_callback(hwnd, extra):
-    global client_box
-    rect = win32gui.GetWindowRect(hwnd)
-    x = rect[0]
-    y = rect[1]
-    w = rect[2] - x
-    h = rect[3] - y
-    window_name = win32gui.GetWindowText(hwnd)
-    if window_name == 'Rodnia - The King\'s Return':
-        print("Window %s:" % window_name)
-        print("\tLocation: (%d, %d)" % (x, y))
-        print("\t    Size: (%d, %d)" % (w, h))
-        if x < 40:
-            x = 40
-        if y < 20:
-            y = 20
-        client_box = [x, y, w, h]
 
 if __name__ == '__main__':
     #Metin.farm()
