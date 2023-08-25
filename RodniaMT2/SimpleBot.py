@@ -80,15 +80,12 @@ class Metin:
         template = cv.imread(current_dir + '\\images\\metin.png',0)
         w, h = template.shape[::-1]
         tries = 0
-        while not metinhealthbarlocation:
-            metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.7)
-            print("Metinhealthbarlocation: " + str(metinhealthbarlocation))
-            tries += 1
-            if metinhealthbarlocation:
-                return True
-            if tries > 3:
-                return False
-            pyautogui.sleep(0.2)
+        metinhealthbarlocation = Metin.locateAndFilterProp(client, metin_health_bar_image, confidence=.7)
+        print("Metinhealthbarlocation: " + str(metinhealthbarlocation))
+        if metinhealthbarlocation:
+            return True
+        return False
+
         leftouterpixellocation_x = int(metinhealthbarlocation.left -132)
         leftouterpixellocation_y = int(metinhealthbarlocation.top + h -5)
         # Try to get the Pixel-Color
@@ -145,7 +142,7 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([0, 0, 0]), np.array([51, 255, 89]))
         
         # desert mask
-        # mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
+        mask = cv.inRange(cropped_screenshot, np.array([112,0,0]), np.array([128,154,255]))
 
         # sohan mountain mask
         #mask = cv.inRange(cropped_screenshot, np.array([111,63,42]), np.array([151,192,158]))
@@ -154,7 +151,7 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([118,127,36]), np.array([133,184,81]))
 
         # spiders
-        mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
+        #mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
 
         pyautogui.sleep(2.5)
         # Step 5: Find contours or location of the object
@@ -326,10 +323,10 @@ def run_bot():
 
     client = {"client_id" : 0,
             "healthbar": [
-                client_box.left,
-                client_box.top,
-                client_box.width,
-                client_box.height
+                client_box.left + 200 * client_box.width // 2073,
+                client_box.top + 100 * client_box.height // 1211,
+                client_box.width - 25 * client_box.width // 2073,
+                client_box.height - 125 * client_box.height // 1211
             ],
             "skills_timer" : 0,
             "bugged_timer": 0,
@@ -389,7 +386,6 @@ def run_bot():
             if Metin.findMetinOpenCV(client):
                 client["bugged_timer"] = time.time()
                 client["farming"] = True
-                pyautogui.sleep(1)
                 continue
             else:
                 Metin.lookaround()
