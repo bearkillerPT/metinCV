@@ -7,6 +7,8 @@ import cv2 as cv
 import numpy as np
 import time
 import os
+import sys
+import traceback
 import pygetwindow as gw
 from CaptchaSolver import CaptchaSolver
 from random import randint
@@ -141,13 +143,19 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([93,101,144]), np.array([115,150,250]))
 
         # papers
-        mask = cv.inRange(cropped_screenshot, np.array([121, 0, 0]), np.array([131, 255, 77]))
+        #mask = cv.inRange(cropped_screenshot, np.array([121, 0, 0]), np.array([131, 255, 77]))
         
-        # Ghost forest
+        # Ghost forest 
+        # lvl 75
         #mask = cv.inRange(cropped_screenshot, np.array([103, 75, 28]), np.array([110, 255, 130]))
+        # lvl 80
+        #mask = cv.inRange(cropped_screenshot, np.array([115, 106, 17]), np.array([179, 215, 134]))
 
         # Red Forest
-        #mask = cv.inRange(cropped_screenshot, np.array([107, 138, 113]), np.array([129, 196, 221]))
+        #mask = cv.inRange(cropped_screenshot, np.array([109, 138, 134]), np.array([117, 249, 255]))
+
+        # Thunder mountains - Metin of wrath
+        mask = cv.inRange(cropped_screenshot, np.array([0, 10, 12]), np.array([94, 68, 56]))
 
         # Step 5: Find contours or location of the object
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -293,9 +301,9 @@ class Metin:
     def farm(client):
         pydirectinput.keyDown("space")
         while True:
+            pydirectinput.keyDown("space")
             screenshot = pyautogui.screenshot()
             if Metin.locateAndFilterProp(client, screenshot, captcha):
-                pydirectinput.keyUp("space")
                 # dd/mm/YY HH:MM:SS
                 print("OH jees, captcha!")
                 
@@ -313,7 +321,7 @@ class Metin:
                 while os.path.exists(current_dir + "\\images\\CAPTCHAS\\" + str(i) + ".png"):
                     i += 1
                 screenshot.save(current_dir + "\\images\\CAPTCHAS\\" + str(i) + ".png")
-                    
+            
             pydirectinput.press('2')
             pyautogui.sleep(2)
             pydirectinput.press('z')
@@ -350,6 +358,7 @@ def run_bot():
     with open("captcha_logs.txt", "a") as file:
         file.write("Starting to farm at: " + time.strftime("%d/%m/%Y %H:%M:%S") + "\n")
     
+    print("Starting to farm!")
     #Metin.farm(client)
     
     while True:
@@ -481,4 +490,11 @@ if __name__ == '__main__':
         print("Ending the bot!")
         with open("captcha_logs.txt", "a") as file:
             file.write("Ending the bot at: " + time.strftime("%d/%m/%Y %H:%M:%S") + "\n\n")
+        # print the stack trace
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print("*** print_tb:")
+        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+        print("*** print_exception:")
+        traceback.print_exception(exc_type, exc_value, exc_traceback,
+                                  limit=2, file=sys.stdout)
         exit(0)

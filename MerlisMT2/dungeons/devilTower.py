@@ -5,7 +5,8 @@ import numpy as np
 import os
 import pygetwindow as gw
 import time
-
+from utils import useSkills, spamCapeAndSleep, waitForNextFloor, goToDungeon, addBlackRectangleOnTopOfThePlayer
+from functionTimer import call_with_timeout
 
 current_dir = os.getcwd()
 boss_heathbar_image = current_dir + '\\images\\boss_heathbar.png'
@@ -33,22 +34,6 @@ client = {"client_id" : 0,
         "window_top": (client_box.left, client_box.top)
 }
 
-def useSkills():
-    print('Using skills!')
-    pydirectinput.keyDown('ctrl')
-    pyautogui.sleep(0.2)
-    pydirectinput.press('h')
-    pydirectinput.keyUp('ctrl')
-    time.sleep(1)
-    pydirectinput.press('3')
-    time.sleep(2)
-    pydirectinput.press('4')
-    time.sleep(2)
-    pydirectinput.keyDown('ctrl')
-    pyautogui.sleep(0.2)
-    pydirectinput.press('h')
-    pydirectinput.keyUp('ctrl')
-
 def findDungeonCenter(screenshot):
     mask = cv.inRange(screenshot, np.array([112, 192, 79]), np.array([122, 239, 146]))
     # blur the colors by a factor of 100
@@ -57,6 +42,7 @@ def findDungeonCenter(screenshot):
 
 def findContour(screenshot, applyMask, area_range=(300, 10000)):
     hsv_screenshot = cv.cvtColor(np.array(screenshot), cv.COLOR_BGR2HSV)
+    hsv_screenshot = addBlackRectangleOnTopOfThePlayer(hsv_screenshot)
     roi_top_left_x = client["healthbar"][0] 
     roi_top_left_y =   client["healthbar"][1] 
     roi_bottom_right_x = client["healthbar"][2] - 200
@@ -79,33 +65,12 @@ def findContour(screenshot, applyMask, area_range=(300, 10000)):
         object_center_y = y + h // 2 + roi_top_left_y
         # draw a rectangle around the detected object
         cv.rectangle(cropped_screenshot, (x, y), (x + w, y + h), (255, 255, 255), 2,)
-        cv.rectangle(cropped_screenshot, (x - 10, y - 10), (x + w + 10, y + h + 10), (255, 0, 0), 2)
         cv.imwrite("res.png", cv.cvtColor(cropped_screenshot, cv.COLOR_HSV2RGB))
         cv.imwrite("mask.png", mask)
         print('Metin found! (x:', str(object_center_x)+ ',y:', object_center_y,'\), area:', area)
         return object_center_x, object_center_y 
     return None
 
-def spamCapeAndSleep(delay):
-    start_time = time.time()
-    while time.time() - start_time < delay:
-        pydirectinput.press('2')
-        pydirectinput.press('z')
-        if pyautogui.locateOnScreen(new_floor_image, confidence=0.7):
-            print('New floor detected!')
-            break
-        
-def waitForNextFloor(maxDelay=None):
-    start_time = time.time()
-    while pyautogui.locateOnScreen(new_floor_image, confidence=0.7) is None:
-        pyautogui.sleep(.1) 
-        if maxDelay and time.time() - start_time > maxDelay:
-            return False
-    while pyautogui.locateOnScreen(new_floor_image, confidence=0.7):
-        pyautogui.sleep(.1)
-    print('New floor detected!')
-    return True
-    
 def walkToDungeonCenter():
     while (center := findContour(pyautogui.screenshot(), findDungeonCenter, area_range=(50000, 1000000))) is None:
         print('Looking for the center of the dungeon...')
@@ -126,6 +91,7 @@ def walkAround(invertedCamera=False):
     pydirectinput.keyUp('w')
 
 def firstFloor():
+    waitForNextFloor()
     walkToDungeonCenter()
     pydirectinput.keyDown('e')
     pyautogui.sleep(.3)
@@ -160,12 +126,7 @@ def firstFloor():
     
 def secondFloor():
     walkToDungeonCenter()
-    farming_start_time = time.time()
     while True:
-        if time.time() - farming_start_time > 10:
-            pydirectinput.keyDown('a')
-            pyautogui.sleep(.5)
-            pydirectinput.keyUp('a')
         for i in range(3):
             walkAround()
             pydirectinput.press('2')
@@ -189,18 +150,16 @@ def thirdFloor():
             pyautogui.moveTo(key_stone[0] + key_stone[2]//2, key_stone[1] + key_stone[3]//2, 0.2)
             pyautogui.click(button='right')
             pyautogui.moveTo(key_stone[0] + key_stone[2]//2-250, key_stone[1] + key_stone[3]//2, 0.2)
+            pyautogui.sleep(.2) # wait for the item to disappear
     while pyautogui.locateOnScreen(new_floor_image, confidence=0.7) is None:
         pyautogui.sleep(.1)
 
 def forthFloor():
     walkToDungeonCenter()
-    start_time = time.time()
     while True:
-        if time.time() - start_time > 10:
-            walkAround(True)
-            start_time = time.time()
+        walkAround()
         pydirectinput.keyDown('space')
-        spamCapeAndSleep(.5)
+        spamCapeAndSleep(3.3)
         pydirectinput.keyUp('space')
         pydirectinput.press('z')
         if pyautogui.locateOnScreen(demon_king_end_image, confidence=0.6):
@@ -208,17 +167,8 @@ def forthFloor():
             break
     
 def fifthFloor():
-    #pydirectinput.keyDown('space')
-    #while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
-    #    pyautogui.sleep(.1)
-    #while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
-    #    pyautogui.sleep(.1)
-    #pydirectinput.keyUp('space')
-    #pydirectinput.press('z')
-    #print('First metin is dead!')
-    #pyautogui.sleep(4)
     for i in range(4):
-        while (metin_location := findContour(pyautogui.screenshot(), metin_of_death_mask, (700, 1200))) is None:
+        while (metin_location := findContour(pyautogui.screenshot(), metin_of_death_mask, (450, 1200))) is None:
             pydirectinput.keyDown('q')
             pyautogui.sleep(.2)
             pydirectinput.keyUp('q')
@@ -229,8 +179,12 @@ def fifthFloor():
         print('Metin found!', metin_location)
         pyautogui.moveTo(metin_location[0], metin_location[1], 0.2)
         pyautogui.click()
+        waiting_for_metin_timer = time.time()
         while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
             pyautogui.sleep(.1)
+            if time.time() - waiting_for_metin_timer > 15:
+                pyautogui.press('z')
+                continue
         start_farming_timer = time.time()
         while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
             if(time.time() - start_farming_timer > 5):
@@ -240,21 +194,12 @@ def fifthFloor():
             pyautogui.sleep(.1)
             #print('Metin is still alive!')
         pydirectinput.press('z')
-        pyautogui.sleep(5)
+        pyautogui.sleep(4)
     
 def sixthFloor():
-    pydirectinput.keyDown('space')
-    pyautogui.sleep(.5)
-    while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
-        pyautogui.sleep(.1)
-    while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
-        pyautogui.sleep(.1)
-    pydirectinput.keyUp('space')
-    pydirectinput.press('z')
-    print('First metin is dead!')
     pyautogui.sleep(4)
-    for i in range(3):
-        while (metin_location := findContour(pyautogui.screenshot(), metin_of_murder_mask, (450, 1200))) is None:
+    for i in range(4):
+        while (metin_location := findContour(pyautogui.screenshot(), metin_of_murder_mask, (350, 1200))) is None:
             pydirectinput.keyDown('q')
             pyautogui.sleep(.2)
             pydirectinput.keyUp('q')
@@ -292,16 +237,19 @@ def seventhFloor():
     pyautogui.click(button='right')
     waitForNextFloor()
 
-def eigthFloor():
+def eigthFloor(dungeon_start_time):
     walkToDungeonCenter()
     useSkills()
     was_boss_found = False
-    start_time = time.time()
+    farming_start_time = time.time()
+    if farming_start_time - dungeon_start_time < 8.5*60: 
+        print("Sleeping until 8.5 minutes have passed since the dungeon started to not teleport to the 1st city")
+        pyautogui.sleep(8.5*60 - farming_start_time + dungeon_start_time)
     while True:
         if not pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
-            if not was_boss_found and (time.time() - start_time) > 4:
+            if not was_boss_found and (time.time() - farming_start_time) > 4:
                 walkAround(True)
-                start_time = time.time()
+                farming_start_time = time.time()
         else:
             was_boss_found = True
         pydirectinput.keyDown('space')
@@ -312,8 +260,9 @@ def eigthFloor():
             print('Boss fight ended!')
             pydirectinput.press('z')
             break
-        
-def completeDungeon():
+
+def timeoutDungeon():
+    dungeon_start_time = time.time()
     useSkills()
     firstFloor()
     secondFloor()
@@ -325,33 +274,20 @@ def completeDungeon():
     sixthFloor()
     pydirectinput.press('i')
     seventhFloor()
-    eigthFloor()
+    eigthFloor(dungeon_start_time)
+    
+def completeDungeon():
+    goToDungeon(devil_tower_image)
+    start_time = time.time()
+    call_with_timeout(timeoutDungeon, timeout=11 * 60)
+    return time.time() - start_time
     
 
 if __name__ == '__main__':
     # You should have the inventory open!
     pyautogui.sleep(1)
     print('Welcome to the Devil\'s Tower!')
-    while True:
-        pydirectinput.press('tab')
-        pyautogui.sleep(.5)
-        while (devil_tower_position := pyautogui.locateOnScreen(devil_tower_image, confidence=0.6)) is None:
-            pyautogui.sleep(.1)
-        pyautogui.moveTo(devil_tower_position[0] + devil_tower_position[2]//2, devil_tower_position[1] + devil_tower_position[3]//2, 0.2)
-        pyautogui.click()
-        pyautogui.sleep(.5)
-        while (enter_dungeon_position := pyautogui.locateOnScreen(enter_dungeon_image, confidence=0.6)) is None:
-            pyautogui.sleep(.1)
-        pyautogui.moveTo(enter_dungeon_position[0] + enter_dungeon_position[2]//2, enter_dungeon_position[1] + enter_dungeon_position[3]//2, 0.2)
-        pyautogui.click()
-        pyautogui.sleep(.5)
-        while (accept_enter_dungeon_position := pyautogui.locateOnScreen(accept_enter_dungeon_image, confidence=0.6)) is None:
-            pyautogui.sleep(.1)
-        pyautogui.moveTo(accept_enter_dungeon_position[0] + accept_enter_dungeon_position[2]//2, accept_enter_dungeon_position[1] + accept_enter_dungeon_position[3]//2, 0.2)
-        pyautogui.click()
-        
-        waitForNextFloor()
-        
+    while True:        
         start_time = time.time()
         completeDungeon()
         timeDiff = time.time() - start_time
@@ -361,4 +297,6 @@ if __name__ == '__main__':
             file.write(f"{int(timeDiff//60)}:{int(timeDiff%60)}\n")
         if timeDiff < 10 * 60:
             pyautogui.sleep(10 * 60 - timeDiff)
-            pyautogui.sleep(15)
+            if timeDiff >= 8 * 60 - 10 and timeDiff < 8 * 60 + 10:
+                pyautogui.sleep(10)
+            print("Done waiting! I'm starting the dungeon again!")
