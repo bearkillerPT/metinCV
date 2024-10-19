@@ -2341,3 +2341,48 @@ Captcha detected at: 15/10/2024 21:27:55
 Bot paused at: 15/10/2024 22:31:50
 Ending the bot at: 15/10/2024 22:57:35
 
+Starting to farm at: 17/10/2024 22:25:12
+Bot paused at: 17/10/2024 22:33:34
+Bot resumed at: 17/10/2024 22:34:17
+Bot paused at: 17/10/2024 22:36:13
+Bot resumed at: 17/10/2024 22:36:49
+Bot paused at: 17/10/2024 22:38:04
+Bot resumed at: 17/10/2024 22:38:11
+Bot paused at: 17/10/2024 22:39:38
+Bot resumed at: 17/10/2024 22:40:07
+Captcha detected at: 17/10/2024 21:58:41
+Bot paused at: 17/10/2024 23:24:24
+Bot resumed at: 17/10/2024 23:24:36
+Bot paused at: 17/10/2024 23:45:44
+Bot resumed at: 17/10/2024 23:45:54
+Captcha detected at: 17/10/2024 22:54:45
+Bot paused at: 17/10/2024 23:55:47
+Bot resumed at: 18/10/2024 00:04:44
+Bot paused at: 18/10/2024 00:15:30
+Bot resumed at: 18/10/2024 00:16:56
+Bot paused at: 18/10/2024 00:29:04
+Bot resumed at: 18/10/2024 00:29:23
+Captcha detected at: 17/10/2024 23:36:49
+Captcha detected at: 18/10/2024 00:18:53
+Captcha detected at: 18/10/2024 00:48:58
+Captcha detected at: 18/10/2024 01:40:02
+Captcha detected at: 18/10/2024 02:20:07
+Captcha detected at: 18/10/2024 03:15:11
+Captcha detected at: 18/10/2024 03:53:16
+Ending the bot at: 18/10/2024 05:27:49
+
+Starting to farm at: 18/10/2024 23:37:21
+Ending the bot at: 18/10/2024 23:40:28
+
+Starting to farm at: 18/10/2024 23:41:32
+Captcha detected at: 18/10/2024 22:52:09
+Bot paused at: 19/10/2024 00:05:58
+Bot resumed at: 19/10/2024 00:08:19
+Bot paused at: 19/10/2024 00:15:25
+Bot resumed at: 19/10/2024 00:16:24
+Captcha detected at: 18/10/2024 23:35:18
+Captcha detected at: 19/10/2024 00:27:22
+Captcha detected at: 19/10/2024 01:06:26
+Captcha detected at: 19/10/2024 02:01:30
+Ending the bot at: 19/10/2024 03:42:37
+

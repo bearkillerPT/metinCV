@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pygetwindow as gw
 import time
-from utils import useSkills, spamCapeAndSleep, waitForNextFloor, goToDungeon, addBlackRectangleOnTopOfThePlayer
+from utils import useSkills, spamCapeAndSleep, waitForNextFloor, goToDungeon, addBlackRectangleOnTopOfThePlayer, getFormattedTime
 from functionTimer import call_with_timeout
 
 current_dir = os.getcwd()
@@ -163,7 +163,8 @@ def forthFloor():
         pydirectinput.keyUp('space')
         pydirectinput.press('z')
         if pyautogui.locateOnScreen(demon_king_end_image, confidence=0.6):
-            print('New floor detected!')
+            print('Demon king must be dead!')
+            pyautogui.sleep(4)
             break
     
 def fifthFloor():
@@ -180,21 +181,24 @@ def fifthFloor():
         pyautogui.moveTo(metin_location[0], metin_location[1], 0.2)
         pyautogui.click()
         waiting_for_metin_timer = time.time()
+        real_metin = True
         while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
             pyautogui.sleep(.1)
-            if time.time() - waiting_for_metin_timer > 15:
+            if time.time() - waiting_for_metin_timer > 30:
                 pyautogui.press('z')
-                continue
-        start_farming_timer = time.time()
-        while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
-            if(time.time() - start_farming_timer > 5):
-                pydirectinput.keyDown('a')
+                real_metin = False
+                break
+        if real_metin:
+            start_farming_timer = time.time()
+            while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
+                if(time.time() - start_farming_timer > 5):
+                    pydirectinput.keyDown('a')
+                    pyautogui.sleep(.1)
+                    pydirectinput.keyUp('a')
                 pyautogui.sleep(.1)
-                pydirectinput.keyUp('a')
-            pyautogui.sleep(.1)
-            #print('Metin is still alive!')
-        pydirectinput.press('z')
-        pyautogui.sleep(4)
+                #print('Metin is still alive!')
+            pydirectinput.press('z')
+            pyautogui.sleep(4)
     
 def sixthFloor():
     pyautogui.sleep(4)
@@ -210,17 +214,23 @@ def sixthFloor():
         print('Metin found!', metin_location)
         pyautogui.moveTo(metin_location[0], metin_location[1], 0.2)
         pyautogui.click()
+        waiting_for_metin_timer = time.time()
+        real_metin = True
         while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
             pyautogui.sleep(.1)
-        start_farming_timer = time.time()
-        while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
-            if(time.time() - start_farming_timer > 5):
-                pydirectinput.keyDown('a')
+            if time.time() - waiting_for_metin_timer > 30:
+                real_metin = False
+                break
+        if real_metin:
+            start_farming_timer = time.time()
+            while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
+                if(time.time() - start_farming_timer > 5):
+                    pydirectinput.keyDown('a')
+                    pyautogui.sleep(.1)
+                    pydirectinput.keyUp('a')
                 pyautogui.sleep(.1)
-                pydirectinput.keyUp('a')
-            pyautogui.sleep(.1)
-        pydirectinput.press('z')
-        pyautogui.sleep(4)
+            pydirectinput.press('z')
+            pyautogui.sleep(4)
     while pyautogui.locateOnScreen(new_floor_image, confidence=0.8) is None: 
         pyautogui.sleep(.1)
         
@@ -243,7 +253,7 @@ def eigthFloor(dungeon_start_time):
     was_boss_found = False
     farming_start_time = time.time()
     if farming_start_time - dungeon_start_time < 8.5*60: 
-        print("Sleeping until 8.5 minutes have passed since the dungeon started to not teleport to the 1st city")
+        print(f"Sleeping for {getFormattedTime(farming_start_time - dungeon_start_time)} until 8:30m have passed since the dungeon started (to avoid teleporting to the 1st city after 2 minutes)")
         pyautogui.sleep(8.5*60 - farming_start_time + dungeon_start_time)
     while True:
         if not pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):

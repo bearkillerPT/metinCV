@@ -22,7 +22,7 @@ if __name__ == "__main__":
             if time.time() - beran_setao_time > beran_setao_timeout:
                 beran_setao_time = time.time()
                 completeBeranSetao()
-                print(getFormattedTime(time.time() - beran_setao_time))
+                print("Finished in ", getFormattedTime(time.time() - beran_setao_time))
         if enabled_dungeons["devilTower"]:
             if time.time() - devil_tower_start_time > devil_tower_timeout:
                 devil_tower_start_time = time.time()                 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
                     max_time_offset = 10
                     # print formatted time
                     print("Started at:", time.strftime('%H:%M:%S', time.localtime(devil_tower_start_time)))
-                    print(getFormattedTime(timeDiff))
+                    print("Finished in ", getFormattedTime(timeDiff))
                     print('Ended at:', time.strftime('%H:%M:%S', time.localtime(time.time())))
                     if timeDiff < devil_tower_timeout:
                         print("Waiting for the cooldown to end... Starting again at:", time.strftime('%H:%M:%S', time.localtime(time.time() + devil_tower_timeout - timeDiff)))

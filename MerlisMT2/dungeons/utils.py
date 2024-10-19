@@ -14,7 +14,7 @@ accept_enter_dungeon_image = current_dir + '\\images\\accept_enter_dungeon.png'
 def getFormattedTime(seconds):
     minutes = int((seconds % 3600) // 60)
     seconds = int(seconds % 60)
-    return f"Finished in {minutes:02d}:{seconds:02d}"
+    return f"{minutes:02d}:{seconds:02d}m"
 
 def useSkills():
     print('Using skills!')

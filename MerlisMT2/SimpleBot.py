@@ -446,7 +446,7 @@ def run_bot():
             #check if the metin is still alive
             if Metin.checkIfMetinStillAlive(client,  screenshot):
                 Metin.collectLoot(client)
-                if(time.time() - client["bugged_timer"] > 3):
+                if(time.time() - client["bugged_timer"] > 15):
                     bugged_timer_start_time = time.time()
                     random = randint(0, 1)
                     camera_direction = 'q' if random == 0 else 'e'
