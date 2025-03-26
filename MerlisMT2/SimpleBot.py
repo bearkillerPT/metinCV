@@ -27,6 +27,8 @@ metin_health_bar_image = current_dir + '\\images\\metin_hp.png'
 lvl = current_dir + '\\images\\lvl.png'
 settings_image = current_dir + '\\images\\settings.png'
 fishingWindow_image = current_dir + '\\images\\fishingWindow.png'
+biologist_deliver = current_dir + '\\images\\biologist\\deliver.png'
+biologist_submit = current_dir + '\\images\\biologist\\submit.png'
 captcha = current_dir + '\\images\\captcha.png'
 healthbarnotempty = False
 pickupkeypressed = False
@@ -86,9 +88,11 @@ class Metin:
 
     def locateAndFilterProp(client, screenshot, prop_image, confidence=0.8):
         prop_locations = pyautogui.locateAll(prop_image, screenshot, confidence=confidence)
-        for prop_location in prop_locations:
-            return prop_location
-                
+        try: 
+            for prop_location in prop_locations:
+                return prop_location
+        except Exception as e:
+            return None        
 
     def checkIfMetinStillAlive(client, screenshot):
         template = cv.imread(current_dir + '\\images\\metin.png',0)
@@ -152,10 +156,16 @@ class Metin:
         #mask = cv.inRange(cropped_screenshot, np.array([115, 106, 17]), np.array([179, 215, 134]))
 
         # Red Forest
-        #mask = cv.inRange(cropped_screenshot, np.array([109, 138, 134]), np.array([117, 249, 255]))
+        mask = cv.inRange(cropped_screenshot, np.array([109, 138, 134]), np.array([117, 249, 255]))
 
         # Thunder mountains - Metin of wrath
-        mask = cv.inRange(cropped_screenshot, np.array([0, 10, 12]), np.array([94, 68, 56]))
+        #mask = cv.inRange(cropped_screenshot, np.array([0, 10, 12]), np.array([94, 68, 56]))
+
+        # Enchanted forest
+        #mask = cv.inRange(cropped_screenshot, np.array([47, 193, 0]), np.array([91, 237, 80]))
+
+        # Zhung Temple
+        #mask =  cv.inRange(cropped_screenshot, np.array([109, 138, 134]), np.array([117, 249, 255]))
 
         # Step 5: Find contours or location of the object
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -166,7 +176,7 @@ class Metin:
             monster_detection_box_size = 0
             for contour in contours:
                 area = cv.contourArea(contour)
-                if area > 600 and area < 10000: #900
+                if area > 300 and area < 10000: #900
                     # Metin and monsters mask
                     x, y, w, h = cv.boundingRect(contour)
                     w += monster_detection_box_size
@@ -182,6 +192,7 @@ class Metin:
                         selected_contour_distance_to_center = current_countour_distance_to_center
                         selected_contour = contour
             if selected_contour is None:
+                print(f"The max area found was {max([cv.contourArea(contour) for contour in contours])}")
                 return False
             x, y, w, h = cv.boundingRect(selected_contour)
             object_center_x = x + w // 2
@@ -238,41 +249,17 @@ class Metin:
         print("biologist!")
         pyautogui.moveTo(client["window_top"][0] , client["window_top"][1] , 0.2)
         autoit.mouse_click("left",client["window_top"][0], client["window_top"][1], 2)
-        biologist_deliver_location = Metin.locateAndFilterProp(client, biologist_deliver)
+        biologist_deliver_location = Metin.locateAndFilterProp(client, pyautogui.screenshot(), biologist_deliver)
         if(biologist_deliver_location):
-            pyautogui.moveTo(int((biologist_deliver_location[0] + biologist_deliver_location[0] + deliver_button_size)/2) , int((biologist_deliver_location[1] + biologist_deliver_location[1] + deliver_button_size)/2) , 0.2)
-            autoit.mouse_click("left",int((biologist_deliver_location[0] + biologist_deliver_location[0] + deliver_button_size)/2), int((biologist_deliver_location[1] + biologist_deliver_location[1] + deliver_button_size)/2), 2)
-            biologist_market_location = [0,0,10,10]
-            pyautogui.sleep(1)
-            biologist_submit_location = Metin.locateAndFilterProp(client, biologist_submit)
-            if biologist_submit_location:
-                biologist_market_location[0] = biologist_submit_location[0] + biologist_submit_location[2] + 42 
-                biologist_market_location[1] = biologist_submit_location[1] + 47
-                pyautogui.sleep(1)
-                pyautogui.moveTo(int((biologist_market_location[0] + biologist_market_location[0] + market_button_size)/2) , int((biologist_market_location[1] + biologist_market_location[1] + market_button_size)/2) , 0.2)
-                autoit.mouse_click("left",int((biologist_market_location[0] + biologist_market_location[0] + market_button_size)/2), int((biologist_market_location[1] + biologist_market_location[1] + market_button_size)/2), 2)
-                pydirectinput.press('i')
-                pyautogui.sleep(1)
-                biologist_orc_tooth_location = Metin.locateAndFilterProp(client, biologist_orc_tooth)
-                if biologist_orc_tooth_location:
-                    pyautogui.moveTo(int((biologist_orc_tooth_location[0] + biologist_orc_tooth_location[0] + orc_tooth_button_size)/2) , int((biologist_orc_tooth_location[1] + biologist_orc_tooth_location[1] + orc_tooth_button_size)/2) , 0.2)
-                    autoit.mouse_click("right",int((biologist_orc_tooth_location[0] + biologist_orc_tooth_location[0] + orc_tooth_button_size)/2), int((biologist_orc_tooth_location[1] + biologist_orc_tooth_location[1] + orc_tooth_button_size)/2), 2)
-                    pydirectinput.press('escape')
-                    pyautogui.sleep(2)
-                    if biologist_submit_location:
-                        pyautogui.moveTo(int((biologist_submit_location[0] + biologist_submit_location[0] + submit_button_size)/2) , int((biologist_submit_location[1] + biologist_submit_location[1] + submit_button_size)/2) , 0.2)
-                        autoit.mouse_click("left",int((biologist_submit_location[0] + biologist_submit_location[0] + submit_button_size)/2), int((biologist_submit_location[1] + biologist_submit_location[1] + submit_button_size)/2), 2)
-                        client["biologist_timer"] = time.time()
-                else:
-                    pyautogui.sleep(1)
-                    pyautogui.moveTo(client["window_top"][0], client["window_top"][1], 0.2)
-                    autoit.mouse_click("left",client["window_top"][0], client["window_top"][1],2)
-                    pydirectinput.press('escape')
-            pyautogui.sleep(1)
-            pyautogui.moveTo(int((biologist_orc_tooth_location[0] + biologist_orc_tooth_location[0] + orc_tooth_button_size)/2) , int((biologist_orc_tooth_location[1] + biologist_orc_tooth_location[1] + orc_tooth_button_size)/2) , 0.2)
-            autoit.mouse_click("right",int((biologist_orc_tooth_location[0] + biologist_orc_tooth_location[0] + orc_tooth_button_size)/2), int((biologist_orc_tooth_location[1] + biologist_orc_tooth_location[1] + orc_tooth_button_size)/2), 2)
-            pydirectinput.press('escape')
-        
+            pyautogui.moveTo(int((biologist_deliver_location[0] + biologist_deliver_location[0] + deliver_button_size)/2) , int((biologist_deliver_location[1] + biologist_deliver_location[1] + deliver_button_size)/2) , 0.1)
+            autoit.mouse_click("left",int((biologist_deliver_location[0] + biologist_deliver_location[0] + deliver_button_size)/2), int((biologist_deliver_location[1] + biologist_deliver_location[1] + deliver_button_size)/2), 1)
+            while (biologist_submit_location:=Metin.locateAndFilterProp(client, pyautogui.screenshot(), biologist_submit, confidence=0.8)) is None:
+                pyautogui.sleep(0.1)
+                print("waiting for submit button")
+            pyautogui.moveTo(int((biologist_submit_location[0] + biologist_submit_location[0] + submit_button_size)/2) , int((biologist_submit_location[1] + biologist_submit_location[1] + submit_button_size)/2) , 0.1)
+            autoit.mouse_click("left",int((biologist_submit_location[0] + biologist_submit_location[0] + submit_button_size)/2), int((biologist_submit_location[1] + biologist_submit_location[1] + submit_button_size)/2), 1)
+        pyautogui.sleep(.1)
+        pydirectinput.press('escape')
 
     def clearInventory(client):
         deleted = []
@@ -303,6 +290,12 @@ class Metin:
         while True:
             pydirectinput.keyDown("space")
             screenshot = pyautogui.screenshot()
+            if keyboard.is_pressed('end'):
+                print('Bot paused!')
+                pyautogui.sleep(2)
+                while not keyboard.is_pressed('end'):
+                    pyautogui.sleep(.25)
+                print('Bot resumed!')
             if Metin.locateAndFilterProp(client, screenshot, captcha):
                 # dd/mm/YY HH:MM:SS
                 print("OH jees, captcha!")
@@ -365,7 +358,7 @@ def run_bot():
         # Check if the game is the active window
         currently_active_window = gw.getActiveWindow()
         if not currently_active_window or not client_box or currently_active_window._hWnd != client_box._hWnd:
-            print("Merlis is not the active window!")
+            print("Merlis is not the active window!", end="\r")
             pyautogui.sleep(1)
             continue
         
@@ -385,6 +378,10 @@ def run_bot():
         if time.time() - client["skills_timer"] > 60 * 5:
             Metin.useSkills(client)
             client["skills_timer"] = time.time()
+        # try to deliver an item
+        if time.time() - client["biologist_timer"] > 60 * 60 * 2:
+            Metin.biologist(client)
+            client["biologist_timer"] = time.time()
                     
         screenshot = pyautogui.screenshot()
                     

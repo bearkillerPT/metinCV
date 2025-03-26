@@ -37,33 +37,33 @@ def spamCapeAndSleep(delay, checkNewFloor=True):
     while time.time() - start_time < delay:
         pydirectinput.press('2')
         pydirectinput.press('z')
-        if checkNewFloor and pyautogui.locateOnScreen(new_floor_image, confidence=0.7):
+        if checkNewFloor and safe_locate_on_screen(new_floor_image, confidence=0.7):
             print('New floor detected!')
             break
         
 def waitForNextFloor(maxDelay=None, waitForNextFloorImage=new_floor_image):
     start_time = time.time()
-    while pyautogui.locateOnScreen(waitForNextFloorImage, confidence=0.7) is None:
+    while safe_locate_on_screen(waitForNextFloorImage, confidence=0.7) is None:
         pyautogui.sleep(.1) 
         if maxDelay and time.time() - start_time > maxDelay:
             return False
-    while pyautogui.locateOnScreen(new_floor_image, confidence=0.7):
+    while safe_locate_on_screen(new_floor_image, confidence=0.7):
         pyautogui.sleep(.1)
     print('New floor detected!')
     return True
 
 def goToDungeon(dungeon_image, waitForNextFloorImage=new_floor_image):
     print("Clicking tab!")
-    while (devil_tower_position := pyautogui.locateOnScreen(dungeon_image, confidence=0.6)) is None:
+    while (devil_tower_position := safe_locate_on_screen(dungeon_image, confidence=0.6)) is None:
         pydirectinput.press('tab')
         pyautogui.sleep(.5)
     pyautogui.moveTo(devil_tower_position[0] + devil_tower_position[2]//2, devil_tower_position[1] + devil_tower_position[3]//2, 0.2)
     pyautogui.click()
-    while (enter_dungeon_position := pyautogui.locateOnScreen(enter_dungeon_image, confidence=0.6)) is None:
+    while (enter_dungeon_position := safe_locate_on_screen(enter_dungeon_image, confidence=0.6)) is None:
         pyautogui.sleep(.1)
     pyautogui.moveTo(enter_dungeon_position[0] + enter_dungeon_position[2]//2, enter_dungeon_position[1] + enter_dungeon_position[3]//2, 0.2)
     pyautogui.click()
-    while (accept_enter_dungeon_position := pyautogui.locateOnScreen(accept_enter_dungeon_image, confidence=0.6)) is None:
+    while (accept_enter_dungeon_position := safe_locate_on_screen(accept_enter_dungeon_image, confidence=0.6)) is None:
         pyautogui.sleep(.1)
     pyautogui.moveTo(accept_enter_dungeon_position[0] + accept_enter_dungeon_position[2]//2, accept_enter_dungeon_position[1] + accept_enter_dungeon_position[3]//2, 0.2)
     pyautogui.click()
@@ -85,3 +85,9 @@ def addBlackRectangleOnTopOfThePlayer(screenshot):
     screenshot[centerRectangle["top"]:centerRectangle["top"] + centerRectangle["height"], centerRectangle["left"]:centerRectangle["left"] + centerRectangle["width"]] = 0
 
     return screenshot
+
+def safe_locate_on_screen(*args, **kwargs):
+    try:
+        return pyautogui.locateOnScreen(*args, **kwargs)
+    except pyautogui.ImageNotFoundException:
+        return None

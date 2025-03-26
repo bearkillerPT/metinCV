@@ -128,7 +128,7 @@ class CaptchaSolver:
         text = text[0][1]
         text = text.split("pictures")[1]
         # if the first char is a space, remove it
-        if text[0] == " ":
+        if len(text) > 0 and text[0] == " ":
             text = text[1:]
         text = text.split(" ")[0]
         return text
@@ -150,7 +150,6 @@ class CaptchaSolver:
         best_prediction, pred_location, score = "", (-1,-1,-1,-1), 0
         if not real_text:
             print("No text detected...")
-            return
         for captcha in individual_captchas:
             prediction = reader.readtext(CaptchaSolver.preprocess_image(captcha['img']))
             if not prediction:

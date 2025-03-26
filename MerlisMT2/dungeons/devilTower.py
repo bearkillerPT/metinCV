@@ -5,7 +5,7 @@ import numpy as np
 import os
 import pygetwindow as gw
 import time
-from utils import useSkills, spamCapeAndSleep, waitForNextFloor, goToDungeon, addBlackRectangleOnTopOfThePlayer, getFormattedTime
+from utils import useSkills, spamCapeAndSleep, waitForNextFloor, goToDungeon, addBlackRectangleOnTopOfThePlayer, safe_locate_on_screen
 from functionTimer import call_with_timeout
 
 current_dir = os.getcwd()
@@ -71,8 +71,8 @@ def findContour(screenshot, applyMask, area_range=(300, 10000)):
         return object_center_x, object_center_y 
     return None
 
-def walkToDungeonCenter():
-    while (center := findContour(pyautogui.screenshot(), findDungeonCenter, area_range=(50000, 1000000))) is None:
+def walkToDungeonCenter(area=(50000, 1000000)):
+    while (center := findContour(pyautogui.screenshot(), findDungeonCenter, area_range=area)) is None:
         print('Looking for the center of the dungeon...')
         pydirectinput.keyDown('q')
         pyautogui.sleep(.275) 
@@ -133,7 +133,7 @@ def secondFloor():
         pydirectinput.keyDown('space')
         spamCapeAndSleep(10)
         pydirectinput.keyUp('space')
-        if pyautogui.locateOnScreen(new_floor_image, confidence=0.7):
+        if safe_locate_on_screen(new_floor_image, confidence=0.7):
             print('New floor detected!')
             break
     
@@ -144,14 +144,14 @@ def thirdFloor():
         pydirectinput.keyDown('space')
         spamCapeAndSleep(.5)
         pydirectinput.keyUp('space')
-        if key_stone := pyautogui.locateOnScreen(key_stone_image, confidence=0.7):
+        if key_stone := safe_locate_on_screen(key_stone_image, confidence=0.7):
             print('Key Stone found!')
             key_stones_clicked += 1
             pyautogui.moveTo(key_stone[0] + key_stone[2]//2, key_stone[1] + key_stone[3]//2, 0.2)
             pyautogui.click(button='right')
             pyautogui.moveTo(key_stone[0] + key_stone[2]//2-250, key_stone[1] + key_stone[3]//2, 0.2)
             pyautogui.sleep(.2) # wait for the item to disappear
-    while pyautogui.locateOnScreen(new_floor_image, confidence=0.7) is None:
+    while safe_locate_on_screen(new_floor_image, confidence=0.7) is None:
         pyautogui.sleep(.1)
 
 def forthFloor():
@@ -162,7 +162,7 @@ def forthFloor():
         spamCapeAndSleep(3.3)
         pydirectinput.keyUp('space')
         pydirectinput.press('z')
-        if pyautogui.locateOnScreen(demon_king_end_image, confidence=0.6):
+        if safe_locate_on_screen(demon_king_end_image, confidence=0.6):
             print('Demon king must be dead!')
             pyautogui.sleep(4)
             break
@@ -182,7 +182,7 @@ def fifthFloor():
         pyautogui.click()
         waiting_for_metin_timer = time.time()
         real_metin = True
-        while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
+        while safe_locate_on_screen(boss_heathbar_image, confidence=0.8) is None:
             pyautogui.sleep(.1)
             if time.time() - waiting_for_metin_timer > 30:
                 pyautogui.press('z')
@@ -190,7 +190,7 @@ def fifthFloor():
                 break
         if real_metin:
             start_farming_timer = time.time()
-            while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
+            while safe_locate_on_screen(boss_heathbar_image, confidence=0.8):
                 if(time.time() - start_farming_timer > 5):
                     pydirectinput.keyDown('a')
                     pyautogui.sleep(.1)
@@ -216,14 +216,14 @@ def sixthFloor():
         pyautogui.click()
         waiting_for_metin_timer = time.time()
         real_metin = True
-        while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
+        while safe_locate_on_screen(boss_heathbar_image, confidence=0.8) is None:
             pyautogui.sleep(.1)
             if time.time() - waiting_for_metin_timer > 30:
                 real_metin = False
                 break
         if real_metin:
             start_farming_timer = time.time()
-            while pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
+            while safe_locate_on_screen(boss_heathbar_image, confidence=0.8):
                 if(time.time() - start_farming_timer > 5):
                     pydirectinput.keyDown('a')
                     pyautogui.sleep(.1)
@@ -231,12 +231,12 @@ def sixthFloor():
                 pyautogui.sleep(.1)
             pydirectinput.press('z')
             pyautogui.sleep(4)
-    while pyautogui.locateOnScreen(new_floor_image, confidence=0.8) is None: 
+    while safe_locate_on_screen(new_floor_image, confidence=0.8) is None: 
         pyautogui.sleep(.1)
         
 def seventhFloor():
     walkToDungeonCenter()
-    while (zin_bong := pyautogui.locateOnScreen(zin_bong_in_key_image, confidence=0.8)) is None:
+    while (zin_bong := safe_locate_on_screen(zin_bong_in_key_image, confidence=0.8)) is None:
         print('Zin Bong not found!')
         pydirectinput.keyDown('space')
         spamCapeAndSleep(.5)
@@ -248,15 +248,15 @@ def seventhFloor():
     waitForNextFloor()
 
 def eigthFloor(dungeon_start_time):
-    walkToDungeonCenter()
-    useSkills()
+    walkToDungeonCenter((5000, 100000))
     was_boss_found = False
     farming_start_time = time.time()
-    if farming_start_time - dungeon_start_time < 8.5*60: 
-        print(f"Sleeping for {getFormattedTime(farming_start_time - dungeon_start_time)} until 8:30m have passed since the dungeon started (to avoid teleporting to the 1st city after 2 minutes)")
-        pyautogui.sleep(8.5*60 - farming_start_time + dungeon_start_time)
+    #if farming_start_time - dungeon_start_time < 7*60: 
+    #    print(f"Sleeping for {getFormattedTime(farming_start_time - dungeon_start_time)} until 8:30m have passed since the dungeon started (to avoid teleporting to the 1st city after 2 minutes)")
+    #    pyautogui.sleep(7*60 - farming_start_time + dungeon_start_time)
+    useSkills()
     while True:
-        if not pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8):
+        if not safe_locate_on_screen(boss_heathbar_image, confidence=0.8):
             if not was_boss_found and (time.time() - farming_start_time) > 4:
                 walkAround(True)
                 farming_start_time = time.time()
@@ -266,7 +266,7 @@ def eigthFloor(dungeon_start_time):
         spamCapeAndSleep(2)
         pydirectinput.keyUp('space')
         pyautogui.sleep(.5)
-        if was_boss_found and pyautogui.locateOnScreen(boss_heathbar_image, confidence=0.8) is None:
+        if was_boss_found and safe_locate_on_screen(boss_heathbar_image, confidence=0.8) is None:
             print('Boss fight ended!')
             pydirectinput.press('z')
             break
@@ -299,7 +299,10 @@ if __name__ == '__main__':
     print('Welcome to the Devil\'s Tower!')
     while True:        
         start_time = time.time()
-        completeDungeon()
+        try:
+            completeDungeon()
+        except Exception as e:
+            print(e)
         timeDiff = time.time() - start_time
 
         print(f"Total time: {int(timeDiff//60)}:{int(timeDiff%60)}s")

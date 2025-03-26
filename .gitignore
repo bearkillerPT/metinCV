@@ -1,5 +1,6 @@
 temp/
 .vscode/
 venv/
+MerlisMT2/captcha_logs.txt
 MerlisMT2/images/CAPTCHAS/*
 MerlisMT2/images/SolvedCaptchas/*

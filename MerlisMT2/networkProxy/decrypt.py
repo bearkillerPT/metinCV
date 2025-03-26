@@ -1,0 +1,11 @@
+# decode aes256 message
+from Crypto.Cipher import AES
+
+prefix = bytes.fromhex('96663aaf')
+key = bytes.fromhex('68676665383736356463626134333231')
+
+msg =  b'\x88c\xbej.B\x06\x9e\xbf12R\xf7\x93\x1e\xd6/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84$\xba\r+;\x08CRJE\xdd{\xe9\xabm\xf7/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84/Z{\xb3;L\xfb\x84'
+
+cipher = AES.new(key, AES.MODE_CBC)
+
+print(cipher.decrypt(msg))
